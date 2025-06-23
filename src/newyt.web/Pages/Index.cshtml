@@ -1,0 +1,96 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "New YouTube Videos";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Unwatched Videos (@Model.Videos.Count)</h2>
+        <div>
+            <a asp-page="/AddChannel" class="btn btn-primary">Add New Channel</a>
+            <form method="post" asp-page-handler="RefreshVideos" class="d-inline">
+                <button type="submit" class="btn btn-outline-secondary">Refresh Videos</button>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Videos.Count == 0)
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-youtube" style="font-size: 4rem; color: #dc3545;"></i>
+            </div>
+            <h4>No unwatched videos found</h4>
+            <p class="text-muted">Add some YouTube channels to get started!</p>
+            <a asp-page="/AddChannel" class="btn btn-primary">Add Your First Channel</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var video in Model.Videos)
+            {
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">@video.Channel.Name</h6>
+                            <h5 class="card-title">@video.Title</h5>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    Published: @video.PublishedAt.ToString("MMM dd, yyyy HH:mm")
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between">
+                                <a href="@video.Url" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-play-circle"></i> Watch
+                                </a>
+                                <form method="post" asp-page-handler="MarkWatched" class="d-inline">
+                                    <input type="hidden" name="videoId" value="@video.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> Mark Watched
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (Model.Channels.Count > 0)
+    {
+        <div class="mt-5">
+            <h4>Your Channels (@Model.Channels.Count)</h4>
+            <div class="row">
+                @foreach (var channel in Model.Channels)
+                {
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">@channel.Name</h6>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        @channel.Videos.Count(v => !v.IsWatched) unwatched videos
+                                    </small>
+                                </p>
+                                <small class="text-muted">Added: @channel.CreatedAt.ToString("MMM dd, yyyy")</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

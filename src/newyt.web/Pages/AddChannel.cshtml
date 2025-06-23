@@ -1,0 +1,52 @@
+@page
+@model newyt.web.Pages.AddChannelModel
+@{
+    ViewData["Title"] = "Add Channel";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Add New YouTube Channel</h3>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                    {
+                        <div class="alert alert-success">
+                            @Model.SuccessMessage
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label asp-for="ChannelInput" class="form-label">Channel ID:</label>
+                            <input asp-for="ChannelInput" class="form-control" placeholder="UCqk3CdGN_j8IR9z4uBbVPSg or channel name">
+                            <div class="form-text">
+                                Enter the YouTube channel ID (starting with UC).
+                                <br>You can find the channel ID in the URL: youtube.com/channel/<strong>UCqk3CdGN_j8IR9z4uBbVPSg</strong>
+                            </div>
+                            <span asp-validation-for="ChannelInput" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Add Channel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-3 text-center">
+                <a asp-page="/Index" class="btn btn-outline-secondary">Back to Videos</a>
+            </div>
+        </div>
+    </div>
+</div>
