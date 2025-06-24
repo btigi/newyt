@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,8 @@ builder.Services.AddLogging(logging =>
 
 // Add Entity Framework
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=newyt.db"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? "Data Source=../../shared-data/newyt.db"));
 
 // Add HTTP client for YouTube RSS service
 builder.Services.AddHttpClient<YouTubeRssService>();
