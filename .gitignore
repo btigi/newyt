@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+/shared-data/newyt.db
+/shared-data/newyt.db-shm
+/shared-data/newyt.db-wal
