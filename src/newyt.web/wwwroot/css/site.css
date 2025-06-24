@@ -204,3 +204,44 @@ body {
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+/* View Transitions API */
+@view-transition {
+  navigation: auto;
+}
+
+/* Custom view transition animations */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+  animation-timing-function: ease-in-out;
+}
+
+/* Fade transition for better theme continuity */
+::view-transition-old(root) {
+  animation-name: fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Prevent flash during view transitions */
+::view-transition-group(root) {
+  animation-duration: 0.25s;
+}
+
+/* Ensure smooth theme transitions */
+html {
+  view-transition-name: root;
+}
