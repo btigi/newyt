@@ -1,0 +1,219 @@
+@page "/channel/{channelId:int}"
+@model ChannelVideosModel
+@{
+    ViewData["Title"] = $"{Model.Channel?.Name} - Videos";
+}
+
+<div class="container mt-4">
+    @if (Model.Channel != null)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>
+                    <i class="bi bi-youtube text-danger"></i>
+                    @Model.Channel.Name
+                </h2>
+                <small class="text-muted">
+                    Channel added: @Model.Channel.CreatedAt.ToString("MMM dd, yyyy")
+                </small>
+            </div>
+            <div>
+                <a asp-page="/Index" class="btn btn-outline-primary">Back to All Videos</a>
+                <a asp-page="/WatchedVideos" class="btn btn-outline-success">View Watched Videos</a>
+                <a asp-page="/AddChannel" class="btn btn-primary">Add New Channel</a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Stats.TotalVideos</h5>
+                        <p class="card-text">Total Videos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Stats.UnwatchedCount</h5>
+                        <p class="card-text">Unwatched</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Stats.WatchedCount</h5>
+                        <p class="card-text">Watched</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Stats.WatchedPercentage.ToString("F1")%</h5>
+                        <p class="card-text">Completion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter and Sort Controls -->
+        <div class="mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <label for="filterSelect" class="form-label">Show:</label>
+                    <select id="filterSelect" class="form-select" onchange="changeFilter(this.value)">
+                        <option value="All" selected="@(Model.Filter == VideoFilter.All)">@Model.GetFilterDisplayName(VideoFilter.All)</option>
+                        <option value="Unwatched" selected="@(Model.Filter == VideoFilter.Unwatched)">@Model.GetFilterDisplayName(VideoFilter.Unwatched)</option>
+                        <option value="Watched" selected="@(Model.Filter == VideoFilter.Watched)">@Model.GetFilterDisplayName(VideoFilter.Watched)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sortSelect" class="form-label">Sort by:</label>
+                    <select id="sortSelect" class="form-select" onchange="changeSort(this.value)">
+                        <option value="DateNewest" selected="@(Model.SortBy == SortOption.DateNewest)">@Model.GetSortDisplayName(SortOption.DateNewest)</option>
+                        <option value="DateOldest" selected="@(Model.SortBy == SortOption.DateOldest)">@Model.GetSortDisplayName(SortOption.DateOldest)</option>
+                        <option value="TitleAZ" selected="@(Model.SortBy == SortOption.TitleAZ)">@Model.GetSortDisplayName(SortOption.TitleAZ)</option>
+                        <option value="TitleZA" selected="@(Model.SortBy == SortOption.TitleZA)">@Model.GetSortDisplayName(SortOption.TitleZA)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Showing @Model.Stats.FilteredCount videos (@Model.GetFilterDisplayName(Model.Filter), @Model.GetSortDisplayName(Model.SortBy))
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @Model.SuccessMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (Model.Videos.Count == 0)
+        {
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-search" style="font-size: 4rem; color: #6c757d;"></i>
+                </div>
+                <h4>No videos found</h4>
+                <p class="text-muted">
+                    @if (Model.Filter == VideoFilter.Unwatched)
+                    {
+                        <text>All videos from this channel have been watched!</text>
+                    }
+                    else if (Model.Filter == VideoFilter.Watched)
+                    {
+                        <text>No videos from this channel have been watched yet.</text>
+                    }
+                    else
+                    {
+                        <text>This channel doesn't have any videos yet.</text>
+                    }
+                </p>
+                <div class="mt-3">
+                    <button class="btn btn-outline-secondary" onclick="changeFilter('All')">Show All Videos</button>
+                    <a asp-page="/Index" class="btn btn-primary">Back to All Videos</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var video in Model.Videos)
+                {
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100 @(video.IsWatched ? "border-success" : "")">
+                            @if (video.IsWatched)
+                            {
+                                <div class="card-header bg-success text-white py-1">
+                                    <small><i class="bi bi-check-circle"></i> Watched @video.WatchedAt?.ToString("MMM dd, yyyy")</small>
+                                </div>
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@video.Title</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        Published: @video.PublishedAt.ToString("MMM dd, yyyy HH:mm")
+                                    </small>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between">
+                                    <a href="@video.Url" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-play-circle"></i> @(video.IsWatched ? "Watch Again" : "Watch")
+                                    </a>
+                                    @if (video.IsWatched)
+                                    {
+                                        <form method="post" asp-page-handler="MarkUnwatched" class="d-inline">
+                                            <input type="hidden" name="videoId" value="@video.Id" />
+                                            <button type="submit" class="btn btn-warning btn-sm" 
+                                                    onclick="return confirm('Mark this video as unwatched?')">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="MarkWatched" class="d-inline">
+                                            <input type="hidden" name="videoId" value="@video.Id" />
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="bi bi-check-circle"></i> Mark Watched
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-exclamation-circle" style="font-size: 4rem; color: #dc3545;"></i>
+            </div>
+            <h4>Channel Not Found</h4>
+            <p class="text-muted">The requested channel could not be found.</p>
+            <a asp-page="/Index" class="btn btn-primary">Back to All Videos</a>
+        </div>
+    }
+</div>
+
+<script>
+function changeFilter(filterValue) {
+    updateUrl({ Filter: filterValue });
+}
+
+function changeSort(sortValue) {
+    updateUrl({ SortBy: sortValue });
+}
+
+function updateUrl(params) {
+    const url = new URL(window.location);
+    
+    // Update the specified parameters
+    Object.keys(params).forEach(key => {
+        url.searchParams.set(key, params[key]);
+    });
+    
+    // Use view transition if supported
+    if (document.startViewTransition) {
+        document.startViewTransition(() => {
+            window.location.href = url.toString();
+        });
+    } else {
+        window.location.href = url.toString();
+    }
+}
+</script> 

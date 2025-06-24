@@ -120,3 +120,18 @@
         }, 0);
     });
 })();
+
+// Sort functionality
+function changeSortOrder(sortValue) {
+    const url = new URL(window.location);
+    url.searchParams.set('SortBy', sortValue);
+    
+    // Use view transition if supported
+    if (document.startViewTransition) {
+        document.startViewTransition(() => {
+            window.location.href = url.toString();
+        });
+    } else {
+        window.location.href = url.toString();
+    }
+}

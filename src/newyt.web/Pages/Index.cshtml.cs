@@ -7,6 +7,16 @@ using newyt.shared.Services;
 
 namespace newyt.web.Pages;
 
+public enum SortOption
+{
+    DateNewest,
+    DateOldest,
+    ChannelAZ,
+    ChannelZA,
+    TitleAZ,
+    TitleZA
+}
+
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _context;
@@ -20,6 +30,9 @@ public class IndexModel : PageModel
 
     public List<Video> Videos { get; set; } = [];
     public List<Channel> Channels { get; set; } = [];
+
+    [BindProperty(SupportsGet = true)]
+    public SortOption SortBy { get; set; } = SortOption.DateNewest;
 
     [TempData]
     public string? SuccessMessage { get; set; }
@@ -41,7 +54,7 @@ public class IndexModel : PageModel
             SuccessMessage = "Video marked as watched!";
         }
 
-        return RedirectToPage();
+        return RedirectToPage(new { SortBy });
     }
 
     public async Task<IActionResult> OnPostRefreshVideosAsync()
@@ -85,20 +98,46 @@ public class IndexModel : PageModel
             SuccessMessage = $"Error refreshing videos: {ex.Message}";
         }
 
-        return RedirectToPage();
+        return RedirectToPage(new { SortBy });
     }
 
     private async Task LoadDataAsync()
     {
-        Videos = await _context.Videos
+        var query = _context.Videos
             .Include(v => v.Channel)
-            .Where(v => !v.IsWatched)
-            .OrderByDescending(v => v.PublishedAt)
-            .ToListAsync();
+            .Where(v => !v.IsWatched);
+
+        // Apply sorting
+        query = SortBy switch
+        {
+            SortOption.DateNewest => query.OrderByDescending(v => v.PublishedAt),
+            SortOption.DateOldest => query.OrderBy(v => v.PublishedAt),
+            SortOption.ChannelAZ => query.OrderBy(v => v.Channel.Name).ThenByDescending(v => v.PublishedAt),
+            SortOption.ChannelZA => query.OrderByDescending(v => v.Channel.Name).ThenByDescending(v => v.PublishedAt),
+            SortOption.TitleAZ => query.OrderBy(v => v.Title),
+            SortOption.TitleZA => query.OrderByDescending(v => v.Title),
+            _ => query.OrderByDescending(v => v.PublishedAt)
+        };
+
+        Videos = await query.ToListAsync();
 
         Channels = await _context.Channels
             .Include(c => c.Videos)
             .OrderBy(c => c.Name)
             .ToListAsync();
+    }
+
+    public string GetSortDisplayName(SortOption sort)
+    {
+        return sort switch
+        {
+            SortOption.DateNewest => "Newest First",
+            SortOption.DateOldest => "Oldest First",
+            SortOption.ChannelAZ => "Channel A-Z",
+            SortOption.ChannelZA => "Channel Z-A",
+            SortOption.TitleAZ => "Title A-Z",
+            SortOption.TitleZA => "Title Z-A",
+            _ => "Newest First"
+        };
     }
 }

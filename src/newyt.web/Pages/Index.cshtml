@@ -16,6 +16,28 @@
         </div>
     </div>
 
+    <div class="mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <label for="sortSelect" class="form-label">Sort by:</label>
+                <select id="sortSelect" class="form-select" onchange="changeSortOrder(this.value)">
+                    <option value="DateNewest" selected="@(Model.SortBy == SortOption.DateNewest)">@Model.GetSortDisplayName(SortOption.DateNewest)</option>
+                    <option value="DateOldest" selected="@(Model.SortBy == SortOption.DateOldest)">@Model.GetSortDisplayName(SortOption.DateOldest)</option>
+                    <option value="ChannelAZ" selected="@(Model.SortBy == SortOption.ChannelAZ)">@Model.GetSortDisplayName(SortOption.ChannelAZ)</option>
+                    <option value="ChannelZA" selected="@(Model.SortBy == SortOption.ChannelZA)">@Model.GetSortDisplayName(SortOption.ChannelZA)</option>
+                    <option value="TitleAZ" selected="@(Model.SortBy == SortOption.TitleAZ)">@Model.GetSortDisplayName(SortOption.TitleAZ)</option>
+                    <option value="TitleZA" selected="@(Model.SortBy == SortOption.TitleZA)">@Model.GetSortDisplayName(SortOption.TitleZA)</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Currently sorted by: <strong>@Model.GetSortDisplayName(Model.SortBy)</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -78,17 +100,31 @@
                 @foreach (var channel in Model.Channels)
                 {
                     <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-title">@channel.Name</h6>
-                                <p class="card-text">
-                                    <small class="text-muted">
-                                        @channel.Videos.Count(v => !v.IsWatched) unwatched videos
+                        <a asp-page="/ChannelVideos" asp-route-channelId="@channel.Id" class="text-decoration-none">
+                            <div class="card channel-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="bi bi-youtube text-danger"></i>
+                                        @channel.Name
+                                    </h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            @channel.Videos.Count(v => !v.IsWatched) unwatched videos
+                                        </small>
+                                        <br/>
+                                        <small class="text-muted">
+                                            @channel.Videos.Count total videos
+                                        </small>
+                                    </p>
+                                    <small class="text-muted">Added: @channel.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <small class="text-primary">
+                                        <i class="bi bi-arrow-right"></i> View channel videos
                                     </small>
-                                </p>
-                                <small class="text-muted">Added: @channel.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 }
             </div>

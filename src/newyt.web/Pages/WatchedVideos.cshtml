@@ -13,6 +13,28 @@
         </div>
     </div>
 
+    <div class="mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <label for="sortSelect" class="form-label">Sort by:</label>
+                <select id="sortSelect" class="form-select" onchange="changeSortOrder(this.value)">
+                    <option value="DateNewest" selected="@(Model.SortBy == SortOption.DateNewest)">@Model.GetSortDisplayName(SortOption.DateNewest)</option>
+                    <option value="DateOldest" selected="@(Model.SortBy == SortOption.DateOldest)">@Model.GetSortDisplayName(SortOption.DateOldest)</option>
+                    <option value="ChannelAZ" selected="@(Model.SortBy == SortOption.ChannelAZ)">@Model.GetSortDisplayName(SortOption.ChannelAZ)</option>
+                    <option value="ChannelZA" selected="@(Model.SortBy == SortOption.ChannelZA)">@Model.GetSortDisplayName(SortOption.ChannelZA)</option>
+                    <option value="TitleAZ" selected="@(Model.SortBy == SortOption.TitleAZ)">@Model.GetSortDisplayName(SortOption.TitleAZ)</option>
+                    <option value="TitleZA" selected="@(Model.SortBy == SortOption.TitleZA)">@Model.GetSortDisplayName(SortOption.TitleZA)</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Currently sorted by: <strong>@Model.GetSortDisplayName(Model.SortBy)</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
