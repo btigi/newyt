@@ -485,3 +485,5 @@ $RECYCLE.BIN/
 /shared-data/newyt.db
 /shared-data/newyt.db-shm
 /shared-data/newyt.db-wal
+/src/newyt.console/newyt.db-shm
+/src/newyt.console/newyt.db-wal
