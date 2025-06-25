@@ -11,6 +11,10 @@ A C# application that helps you track new videos from YouTube channels without h
 - **Background Service**: Console application runs continuously to check for new videos
 - **SQLite Database**: Lightweight database for storing channels and videos
 
+## Screenshot
+
+![screenshot showing output](resources/screenshot.png)
+
 ## Architecture
 
 The solution consists of three projects:
