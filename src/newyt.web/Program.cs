@@ -16,6 +16,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Add HTTP client for YouTube RSS service
 builder.Services.AddHttpClient<YouTubeRssService>();
 
+// Add HTTP client for YouTube Channel Resolver
+builder.Services.AddHttpClient<YouTubeChannelResolver>();
+
 var app = builder.Build();
 
 // Ensure database is created

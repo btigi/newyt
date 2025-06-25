@@ -12,15 +12,17 @@ public class AddChannelModel : PageModel
 {
     private readonly AppDbContext _context;
     private readonly YouTubeRssService _youTubeService;
+    private readonly YouTubeChannelResolver _channelResolver;
 
-    public AddChannelModel(AppDbContext context, YouTubeRssService youTubeService)
+    public AddChannelModel(AppDbContext context, YouTubeRssService youTubeService, YouTubeChannelResolver channelResolver)
     {
         _context = context;
         _youTubeService = youTubeService;
+        _channelResolver = channelResolver;
     }
 
     [BindProperty]
-    [Required(ErrorMessage = "Channel ID required")]
+    [Required(ErrorMessage = "Channel name, URL, or ID required")]
     public string ChannelInput { get; set; } = string.Empty;
 
     [TempData]
@@ -42,11 +44,12 @@ public class AddChannelModel : PageModel
 
         try
         {
-            var channelId = ChannelInput.Trim();
+            // Try to resolve the input to a channel ID
+            var channelId = await _channelResolver.ResolveChannelIdAsync(ChannelInput.Trim());
 
-            if (!channelId.StartsWith("UC"))
+            if (string.IsNullOrEmpty(channelId))
             {
-                ErrorMessage = "Please provide a valid YouTube Channel ID starting with 'UC'";
+                ErrorMessage = "Could not find a YouTube channel with that name, URL, or ID. Please check your input and try again.";
                 return RedirectToPage();
             }
 
@@ -56,7 +59,7 @@ public class AddChannelModel : PageModel
 
             if (existingChannel != null)
             {
-                ErrorMessage = "This channel has already been added";
+                ErrorMessage = $"Channel '{existingChannel.Name}' has already been added";
                 return RedirectToPage();
             }
 
@@ -65,7 +68,7 @@ public class AddChannelModel : PageModel
             
             if (string.IsNullOrEmpty(channelName))
             {
-                ErrorMessage = "Could not find a YouTube channel with this ID. Please check the ID and try again.";
+                ErrorMessage = "Found the channel but could not validate it. The channel might not have any videos or RSS feed may be unavailable.";
                 return RedirectToPage();
             }
 
@@ -80,7 +83,7 @@ public class AddChannelModel : PageModel
             _context.Channels.Add(channel);
             await _context.SaveChangesAsync();
 
-            SuccessMessage = $"Successfully added channel: {channelName}";
+            SuccessMessage = $"Successfully added channel: {channelName} (ID: {channelId})";
             return RedirectToPage();
         }
         catch (Exception ex)

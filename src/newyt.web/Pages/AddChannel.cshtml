@@ -28,11 +28,13 @@
 
                     <form method="post">
                         <div class="mb-3">
-                            <label asp-for="ChannelInput" class="form-label">Channel ID:</label>
-                            <input asp-for="ChannelInput" class="form-control" placeholder="UCqk3CdGN_j8IR9z4uBbVPSg or channel name">
+                            <label asp-for="ChannelInput" class="form-label">Channel Name, URL, or ID:</label>
+                            <input asp-for="ChannelInput" class="form-control" placeholder="Lana Del Rey, @@lanadelrey, or UCqk3CdGN_j8IR9z4uBbVPSg">
                             <div class="form-text">
-                                Enter the YouTube channel ID (starting with UC).
-                                <br>You can find the channel ID in the URL: youtube.com/channel/<strong>UCqk3CdGN_j8IR9z4uBbVPSg</strong>
+                                Enter any of the following:
+                                <br><strong>Channel Name:</strong> "Lana Del Rey" (we'll try to find it automatically)
+                                <br><strong>YouTube URL:</strong> youtube.com/@@lanadelrey or youtube.com/c/lanadelrey
+                                <br><strong>Channel ID:</strong> UCqk3CdGN_j8IR9z4uBbVPSg (starts with UC)
                             </div>
                             <span asp-validation-for="ChannelInput" class="text-danger"></span>
                         </div>
