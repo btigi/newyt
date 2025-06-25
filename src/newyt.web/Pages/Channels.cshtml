@@ -1,0 +1,197 @@
+@page
+@model ChannelsModel
+@{
+    ViewData["Title"] = "All Channels";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-collection-play"></i>
+            Your Channels (@Model.Channels.Count)
+        </h2>
+        <div>
+            <a asp-page="/Index" class="btn btn-outline-primary">Back to Videos</a>
+            <a asp-page="/WatchedVideos" class="btn btn-outline-success">View Watched Videos</a>
+            <a asp-page="/AddChannel" class="btn btn-primary">Add New Channel</a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    @if (Model.Channels.Count > 0)
+    {
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Summary.TotalChannels</h5>
+                        <p class="card-text">Total Channels</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Summary.ActiveChannels</h5>
+                        <p class="card-text">With Unwatched</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Summary.TotalVideos</h5>
+                        <p class="card-text">Total Videos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Summary.TotalUnwatchedVideos</h5>
+                        <p class="card-text">Unwatched</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Summary.TotalWatchedVideos</h5>
+                        <p class="card-text">Watched</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Summary.WatchedPercentage.ToString("F1")%</h5>
+                        <p class="card-text">Completion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Sort Control -->
+    @if (Model.Channels.Count > 1)
+    {
+        <div class="mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label for="sortSelect" class="form-label">Sort by:</label>
+                    <select id="sortSelect" class="form-select" onchange="changeSortOrder(this.value)">
+                        <option value="ChannelAZ" selected="@(Model.SortBy == SortOption.ChannelAZ)">@Model.GetSortDisplayName(SortOption.ChannelAZ)</option>
+                        <option value="ChannelZA" selected="@(Model.SortBy == SortOption.ChannelZA)">@Model.GetSortDisplayName(SortOption.ChannelZA)</option>
+                        <option value="DateNewest" selected="@(Model.SortBy == SortOption.DateNewest)">@Model.GetSortDisplayName(SortOption.DateNewest)</option>
+                        <option value="DateOldest" selected="@(Model.SortBy == SortOption.DateOldest)">@Model.GetSortDisplayName(SortOption.DateOldest)</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Currently sorted by: <strong>@Model.GetSortDisplayName(Model.SortBy)</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Channels.Count == 0)
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-collection-play" style="font-size: 4rem; color: #6c757d;"></i>
+            </div>
+            <h4>No channels added yet</h4>
+            <p class="text-muted">Start by adding your first YouTube channel!</p>
+            <a asp-page="/AddChannel" class="btn btn-primary">Add Your First Channel</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var channel in Model.Channels)
+            {
+                <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                    <a asp-page="/ChannelVideos" asp-route-channelId="@channel.Id" class="text-decoration-none">
+                        <div class="card channel-card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-youtube text-danger"></i>
+                                    @channel.Name
+                                </h6>
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-eye-slash"></i>
+                                        <strong>@channel.Videos.Count(v => !v.IsWatched)</strong> unwatched
+                                    </small>
+                                    <br/>
+                                    <small class="text-muted">
+                                        <i class="bi bi-collection"></i>
+                                        <strong>@channel.Videos.Count</strong> total videos
+                                    </small>
+                                    <br/>
+                                    @if (channel.Videos.Any())
+                                    {
+                                        var watchedPercent = (double)channel.Videos.Count(v => v.IsWatched) / channel.Videos.Count * 100;
+                                        <small class="text-muted">
+                                            <i class="bi bi-bar-chart"></i>
+                                            <strong>@watchedPercent.ToString("F1")%</strong> completed
+                                        </small>
+                                    }
+                                </div>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-plus"></i>
+                                    Added: @channel.CreatedAt.ToString("MMM dd, yyyy")
+                                </small>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-primary">
+                                        <i class="bi bi-arrow-right"></i> View videos
+                                    </small>
+                                    @if (channel.Videos.Count(v => !v.IsWatched) > 0)
+                                    {
+                                        <span class="badge bg-primary">@channel.Videos.Count(v => !v.IsWatched) new</span>
+                                    }
+                                    else if (channel.Videos.Any())
+                                    {
+                                        <span class="badge bg-success">All watched</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No videos</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+function changeSortOrder(sortValue) {
+    const url = new URL(window.location);
+    url.searchParams.set('SortBy', sortValue);
+    
+    // Use view transition if supported
+    if (document.startViewTransition) {
+        document.startViewTransition(() => {
+            window.location.href = url.toString();
+        });
+    } else {
+        window.location.href = url.toString();
+    }
+}
+</script> 

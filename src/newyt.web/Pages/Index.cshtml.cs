@@ -29,7 +29,6 @@ public class IndexModel : PageModel
     }
 
     public List<Video> Videos { get; set; } = [];
-    public List<Channel> Channels { get; set; } = [];
 
     [BindProperty(SupportsGet = true)]
     public SortOption SortBy { get; set; } = SortOption.DateNewest;
@@ -120,11 +119,6 @@ public class IndexModel : PageModel
         };
 
         Videos = await query.ToListAsync();
-
-        Channels = await _context.Channels
-            .Include(c => c.Videos)
-            .OrderBy(c => c.Name)
-            .ToListAsync();
     }
 
     public string GetSortDisplayName(SortOption sort)
