@@ -154,6 +154,8 @@
                                     {
                                         <form method="post" asp-page-handler="MarkUnwatched" class="d-inline">
                                             <input type="hidden" name="videoId" value="@video.Id" />
+                                            <input type="hidden" name="Filter" value="@Model.Filter" />
+                                            <input type="hidden" name="SortBy" value="@Model.SortBy" />
                                             <button type="submit" class="btn btn-warning btn-sm" 
                                                     onclick="return confirm('Mark this video as unwatched?')">
                                                 <i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched
@@ -164,6 +166,8 @@
                                     {
                                         <form method="post" asp-page-handler="MarkWatched" class="d-inline">
                                             <input type="hidden" name="videoId" value="@video.Id" />
+                                            <input type="hidden" name="Filter" value="@Model.Filter" />
+                                            <input type="hidden" name="SortBy" value="@Model.SortBy" />
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="bi bi-check-circle"></i> Mark Watched
                                             </button>

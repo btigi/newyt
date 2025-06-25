@@ -33,7 +33,7 @@ public class ChannelVideosModel : PageModel
     public SortOption SortBy { get; set; } = SortOption.DateNewest;
 
     [BindProperty(SupportsGet = true)]
-    public VideoFilter Filter { get; set; } = VideoFilter.All;
+    public VideoFilter Filter { get; set; } = VideoFilter.Unwatched;
 
     [TempData]
     public string? SuccessMessage { get; set; }
