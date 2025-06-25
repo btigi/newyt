@@ -35,7 +35,8 @@ public class YouTubeRssService
                 var publishedStr = entry.Element(ns + "published")?.Value;
                 
                 if (!string.IsNullOrEmpty(videoId) && !string.IsNullOrEmpty(title) && 
-                    !string.IsNullOrEmpty(link) && DateTime.TryParse(publishedStr, out var published))
+                    !string.IsNullOrEmpty(link) && DateTime.TryParse(publishedStr, out var published) &&
+                    !link.Contains("/shorts/"))
                 {
                     videos.Add(new Video
                     {
