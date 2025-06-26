@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using newyt.shared.Data;
 using newyt.shared.Models;
 using newyt.shared.Services;
+using newyt.web.Models;
 
 namespace newyt.web.Pages;
 
@@ -23,17 +25,21 @@ public class IndexModel : PageModel
     private readonly ThumbnailDownloaderService _thumbnailDownloader;
     private readonly ILogger<YouTubeRssService> _youTubeServiceLogger;
     private readonly HttpClient _httpClient;
+    private readonly UIConfiguration _uiConfig;
 
     public IndexModel(AppDbContext context, ThumbnailDownloaderService thumbnailDownloader, 
-        ILogger<YouTubeRssService> youTubeServiceLogger, HttpClient httpClient)
+        ILogger<YouTubeRssService> youTubeServiceLogger, HttpClient httpClient, IOptions<UIConfiguration> uiConfig)
     {
         _context = context;
         _thumbnailDownloader = thumbnailDownloader;
         _youTubeServiceLogger = youTubeServiceLogger;
         _httpClient = httpClient;
+        _uiConfig = uiConfig.Value;
     }
 
     public List<Video> Videos { get; set; } = [];
+    
+    public bool ShowThumbnails => _uiConfig.ShowThumbnails;
 
     [BindProperty(SupportsGet = true)]
     public SortOption SortBy { get; set; } = SortOption.DateNewest;
@@ -43,6 +49,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
+        // Debug: Log the configuration value
+        Console.WriteLine($"DEBUG: ShowThumbnails configuration value: {_uiConfig.ShowThumbnails}");
         await LoadDataAsync();
     }
 

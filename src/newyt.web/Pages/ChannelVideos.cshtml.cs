@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using newyt.shared.Data;
 using newyt.shared.Models;
+using newyt.web.Models;
 
 namespace newyt.web.Pages;
 
@@ -16,15 +18,19 @@ public enum VideoFilter
 public class ChannelVideosModel : PageModel
 {
     private readonly AppDbContext _context;
+    private readonly UIConfiguration _uiConfig;
 
-    public ChannelVideosModel(AppDbContext context)
+    public ChannelVideosModel(AppDbContext context, IOptions<UIConfiguration> uiConfig)
     {
         _context = context;
+        _uiConfig = uiConfig.Value;
     }
 
     public Channel? Channel { get; set; }
     public List<Video> Videos { get; set; } = [];
     public ChannelStats Stats { get; set; } = new();
+    
+    public bool ShowThumbnails => _uiConfig.ShowThumbnails;
 
     [BindProperty(SupportsGet = true)]
     public int ChannelId { get; set; }

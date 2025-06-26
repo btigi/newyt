@@ -129,22 +129,58 @@
             <div class="row">
                 @foreach (var video in Model.Videos)
                 {
-                    <div class="col-lg-6 col-xl-4 mb-4">
-                        <div class="card h-100 @(video.IsWatched ? "border-success" : "")">
-                            @if (video.IsWatched)
+                                    <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 @(video.IsWatched ? "border-success" : "")">
+                        @if (video.IsWatched)
+                        {
+                            <div class="card-header bg-success text-white py-1">
+                                <small><i class="bi bi-check-circle"></i> Watched @video.WatchedAt?.ToString("MMM dd, yyyy")</small>
+                            </div>
+                        }
+                        @if (Model.ShowThumbnails)
+                        {
+                            @if (!string.IsNullOrEmpty(video.ThumbnailPath))
                             {
-                                <div class="card-header bg-success text-white py-1">
-                                    <small><i class="bi bi-check-circle"></i> Watched @video.WatchedAt?.ToString("MMM dd, yyyy")</small>
+                                <div class="position-relative">
+                                    <img src="@video.ThumbnailPath" class="card-img-top" alt="@video.Title" 
+                                         style="height: 200px; object-fit: cover;" loading="lazy" />
+                                    @if (video.IsWatched)
+                                    {
+                                        <div class="position-absolute top-0 start-0 p-2">
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Watched</span>
+                                        </div>
+                                    }
                                 </div>
                             }
-                            <div class="card-body">
-                                <h5 class="card-title">@video.Title</h5>
-                                <p class="card-text">
-                                    <small class="text-muted">
-                                        Published: @video.PublishedAt.ToString("MMM dd, yyyy HH:mm")
-                                    </small>
-                                </p>
-                            </div>
+                            else
+                            {
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                        @if (video.IsWatched)
+                                        {
+                                            <div class="mt-2">
+                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Watched</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                        <div class="card-body">
+                            @if (!Model.ShowThumbnails && video.IsWatched)
+                            {
+                                <div class="mb-2">
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Watched</span>
+                                </div>
+                            }
+                            <h5 class="card-title" style="font-size: 1rem; line-height: 1.3;">@video.Title</h5>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar3"></i> @video.PublishedAt.ToString("MMM dd, yyyy")
+                                </small>
+                            </p>
+                        </div>
                             <div class="card-footer bg-transparent">
                                 <div class="d-flex justify-content-between">
                                     <a href="@video.Url" target="_blank" class="btn btn-outline-primary btn-sm">

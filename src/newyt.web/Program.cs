@@ -2,8 +2,13 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using newyt.shared.Data;
 using newyt.shared.Services;
+using newyt.web.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add configuration
+builder.Services.Configure<UIConfiguration>(
+    builder.Configuration.GetSection(UIConfiguration.SectionName));
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -66,10 +71,17 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Configure static files with explicit MIME types
+// Configure static files
+app.UseStaticFiles();
+
+// Configure additional static files with explicit MIME types
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".css"] = "text/css";
 provider.Mappings[".js"] = "application/javascript";
+provider.Mappings[".jpg"] = "image/jpeg";
+provider.Mappings[".jpeg"] = "image/jpeg";
+provider.Mappings[".png"] = "image/png";
+provider.Mappings[".webp"] = "image/webp";
 
 app.UseStaticFiles(new StaticFileOptions
 {

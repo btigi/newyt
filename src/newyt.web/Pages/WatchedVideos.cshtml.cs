@@ -1,22 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using newyt.shared.Data;
 using newyt.shared.Models;
+using newyt.web.Models;
 
 namespace newyt.web.Pages;
 
 public class WatchedVideosModel : PageModel
 {
     private readonly AppDbContext _context;
+    private readonly UIConfiguration _uiConfig;
 
-    public WatchedVideosModel(AppDbContext context)
+    public WatchedVideosModel(AppDbContext context, IOptions<UIConfiguration> uiConfig)
     {
         _context = context;
+        _uiConfig = uiConfig.Value;
     }
 
     public List<Video> Videos { get; set; } = [];
     public WatchStats WatchStats { get; set; } = new();
+    
+    public bool ShowThumbnails => _uiConfig.ShowThumbnails;
 
     [BindProperty(SupportsGet = true)]
     public SortOption SortBy { get; set; } = SortOption.DateNewest;
