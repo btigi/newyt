@@ -487,3 +487,4 @@ $RECYCLE.BIN/
 /shared-data/newyt.db-wal
 /src/newyt.console/newyt.db-shm
 /src/newyt.console/newyt.db-wal
+/src/newyt.web/wwwroot/thumbnails

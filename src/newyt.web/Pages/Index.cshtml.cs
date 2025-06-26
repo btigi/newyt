@@ -20,12 +20,17 @@ public enum SortOption
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _context;
-    private readonly YouTubeRssService _youTubeService;
+    private readonly ThumbnailDownloaderService _thumbnailDownloader;
+    private readonly ILogger<YouTubeRssService> _youTubeServiceLogger;
+    private readonly HttpClient _httpClient;
 
-    public IndexModel(AppDbContext context, YouTubeRssService youTubeService)
+    public IndexModel(AppDbContext context, ThumbnailDownloaderService thumbnailDownloader, 
+        ILogger<YouTubeRssService> youTubeServiceLogger, HttpClient httpClient)
     {
         _context = context;
-        _youTubeService = youTubeService;
+        _thumbnailDownloader = thumbnailDownloader;
+        _youTubeServiceLogger = youTubeServiceLogger;
+        _httpClient = httpClient;
     }
 
     public List<Video> Videos { get; set; } = [];
@@ -60,12 +65,15 @@ public class IndexModel : PageModel
     {
         try
         {
+            // Create YouTube service with thumbnail downloader
+            var youTubeService = new YouTubeRssService(_httpClient, _thumbnailDownloader, _youTubeServiceLogger);
+            
             var channels = await _context.Channels.ToListAsync();
             int newVideosCount = 0;
 
             foreach (var channel in channels)
             {
-                var videos = await _youTubeService.GetVideosFromChannelAsync(channel.ChannelId);
+                var videos = await youTubeService.GetVideosFromChannelAsync(channel.ChannelId);
                 
                 foreach (var video in videos)
                 {
@@ -78,6 +86,11 @@ public class IndexModel : PageModel
                         video.ChannelId = channel.Id;
                         _context.Videos.Add(video);
                         newVideosCount++;
+                    }
+                    else if (existingVideo.ThumbnailPath == null && video.ThumbnailPath != null)
+                    {
+                        // Update existing video with thumbnail if it didn't have one before
+                        existingVideo.ThumbnailPath = video.ThumbnailPath;
                     }
                 }
             }

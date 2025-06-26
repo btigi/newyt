@@ -51,7 +51,12 @@ public class VideoFetcherService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var youTubeService = scope.ServiceProvider.GetRequiredService<YouTubeRssService>();
+        var thumbnailDownloader = scope.ServiceProvider.GetRequiredService<ThumbnailDownloaderService>();
+        var youTubeServiceLogger = scope.ServiceProvider.GetRequiredService<ILogger<YouTubeRssService>>();
+        var httpClient = scope.ServiceProvider.GetRequiredService<HttpClient>();
+        
+        // Create YouTube service with thumbnail downloader
+        var youTubeService = new YouTubeRssService(httpClient, thumbnailDownloader, youTubeServiceLogger);
 
         _logger.LogInformation("Starting video fetch operation");
 
@@ -86,7 +91,13 @@ public class VideoFetcherService : BackgroundService
                         newVideosForChannel++;
                         totalNewVideos++;
                         
-                        _logger.LogInformation("Found new video: {VideoTitle}", video.Title);
+                        _logger.LogInformation("Found new video: {VideoTitle} (Thumbnail: {ThumbnailPath})", video.Title, video.ThumbnailPath ?? "Not downloaded");
+                    }
+                    else if (existingVideo.ThumbnailPath == null && video.ThumbnailPath != null)
+                    {
+                        // Update existing video with thumbnail if it didn't have one before
+                        existingVideo.ThumbnailPath = video.ThumbnailPath;
+                        _logger.LogInformation("Updated thumbnail for existing video: {VideoTitle}", video.Title);
                     }
                 }
 

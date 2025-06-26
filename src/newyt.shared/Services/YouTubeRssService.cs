@@ -1,15 +1,20 @@
 using System.Xml.Linq;
 using newyt.shared.Models;
+using Microsoft.Extensions.Logging;
 
 namespace newyt.shared.Services;
 
 public class YouTubeRssService
 {
     private readonly HttpClient _httpClient;
+    private readonly ThumbnailDownloaderService? _thumbnailDownloader;
+    private readonly ILogger<YouTubeRssService>? _logger;
 
-    public YouTubeRssService(HttpClient httpClient)
+    public YouTubeRssService(HttpClient httpClient, ThumbnailDownloaderService? thumbnailDownloader = null, ILogger<YouTubeRssService>? logger = null)
     {
         _httpClient = httpClient;
+        _thumbnailDownloader = thumbnailDownloader;
+        _logger = logger;
     }
 
     public async Task<List<Video>> GetVideosFromChannelAsync(string channelId)
@@ -38,13 +43,48 @@ public class YouTubeRssService
                     !string.IsNullOrEmpty(link) && DateTime.TryParse(publishedStr, out var published) &&
                     !link.Contains("/shorts/"))
                 {
-                    videos.Add(new Video
+                    var video = new Video
                     {
                         VideoId = videoId,
                         Title = title,
                         Url = link,
                         PublishedAt = published
-                    });
+                    };
+
+                    // Download thumbnail if service is available
+                    if (_thumbnailDownloader != null)
+                    {
+                        try
+                        {
+                            // Check if thumbnail already exists
+                            var existingThumbnailPath = _thumbnailDownloader.GetThumbnailPath(videoId);
+                            if (existingThumbnailPath != null)
+                            {
+                                video.ThumbnailPath = existingThumbnailPath;
+                                _logger?.LogDebug("Using existing thumbnail for video {VideoId}", videoId);
+                            }
+                            else
+                            {
+                                // Download new thumbnail
+                                var thumbnailPath = await _thumbnailDownloader.DownloadThumbnailAsync(videoId);
+                                if (thumbnailPath != null)
+                                {
+                                    video.ThumbnailPath = thumbnailPath;
+                                    _logger?.LogInformation("Downloaded thumbnail for video {VideoId}: {Title}", videoId, title);
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("Failed to download thumbnail for video {VideoId}: {Title}", videoId, title);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "Error processing thumbnail for video {VideoId}: {Title}", videoId, title);
+                        }
+                    }
+
+                    videos.Add(video);
                 }
             }
         }

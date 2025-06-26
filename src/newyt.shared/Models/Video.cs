@@ -28,6 +28,9 @@ public class Video
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
+    [MaxLength(500)]
+    public string? ThumbnailPath { get; set; }
+    
     // Navigation property
     public Channel Channel { get; set; } = null!;
 }

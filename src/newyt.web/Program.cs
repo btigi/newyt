@@ -19,13 +19,42 @@ builder.Services.AddHttpClient<YouTubeRssService>();
 // Add HTTP client for YouTube Channel Resolver
 builder.Services.AddHttpClient<YouTubeChannelResolver>();
 
+// Add HTTP client for thumbnail downloader
+builder.Services.AddHttpClient<ThumbnailDownloaderService>();
+
+// Configure thumbnail downloader for web app
+builder.Services.AddSingleton<ThumbnailDownloaderService>(provider =>
+{
+    var httpClient = provider.GetRequiredService<HttpClient>();
+    var logger = provider.GetRequiredService<ILogger<ThumbnailDownloaderService>>();
+    
+    // Path for web app's wwwroot/thumbnails
+    var thumbnailsPath = "wwwroot/thumbnails";
+    
+    return new ThumbnailDownloaderService(httpClient, logger, thumbnailsPath);
+});
+
+// Add database upgrade service
+builder.Services.AddScoped<DatabaseUpgradeService>();
+
 var app = builder.Build();
 
-// Ensure database is created
+// Upgrade database schema
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        var databaseUpgrade = scope.ServiceProvider.GetRequiredService<DatabaseUpgradeService>();
+        await databaseUpgrade.UpgradeDatabaseAsync();
+        logger.LogInformation("Database schema upgrade completed");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred during database upgrade");
+        // Don't exit here for web app, just log the error
+    }
 }
 
 // Configure the HTTP request pipeline.
