@@ -311,13 +311,14 @@ function updateVideoCardAsUnwatched(videoId) {
     const card = document.querySelector(`[data-video-id="${videoId}"]`).closest('.card');
     if (!card) return;
     
-    // Check if we're on channel page with "Watched" filter
+    // Check if we're on different pages
+    const isWatchedVideosPage = window.location.pathname === '/WatchedVideos';
     const isChannelPage = window.location.pathname.startsWith('/channel/');
     const urlParams = new URLSearchParams(window.location.search);
     const currentFilter = urlParams.get('Filter') || 'Unwatched'; // Default filter is Unwatched
     
-    if (isChannelPage && currentFilter === 'Watched') {
-        // On channel page with "Watched" filter, fade out and remove the card
+    if (isWatchedVideosPage || (isChannelPage && currentFilter === 'Watched')) {
+        // On WatchedVideos page OR channel page with "Watched" filter, fade out and remove the card
         card.style.transition = 'opacity 0.5s ease-out';
         card.style.opacity = '0';
         
@@ -329,21 +330,36 @@ function updateVideoCardAsUnwatched(videoId) {
             if (videoCards.length === 0) {
                 const videoContainer = document.querySelector('.row');
                 if (videoContainer) {
-                    videoContainer.innerHTML = `
-                        <div class="col-12">
-                            <div class="text-center py-5">
-                                <div class="mb-4">
-                                    <i class="bi bi-search" style="font-size: 4rem; color: #6c757d;"></i>
-                                </div>
-                                <h4>No videos found</h4>
-                                <p class="text-muted">No videos from this channel have been watched yet.</p>
-                                <div class="mt-3">
-                                    <button class="btn btn-outline-secondary" onclick="changeFilter('All')">Show All Videos</button>
-                                    <button class="btn btn-outline-secondary" onclick="changeFilter('Unwatched')">Show Unwatched Videos</button>
+                    if (isWatchedVideosPage) {
+                        videoContainer.innerHTML = `
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <div class="mb-4">
+                                        <i class="bi bi-check-circle" style="font-size: 4rem; color: #198754;"></i>
+                                    </div>
+                                    <h4>No watched videos yet</h4>
+                                    <p class="text-muted">Videos you mark as watched will appear here.</p>
+                                    <a href="/" class="btn btn-primary">Go to Unwatched Videos</a>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        videoContainer.innerHTML = `
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <div class="mb-4">
+                                        <i class="bi bi-search" style="font-size: 4rem; color: #6c757d;"></i>
+                                    </div>
+                                    <h4>No videos found</h4>
+                                    <p class="text-muted">No videos from this channel have been watched yet.</p>
+                                    <div class="mt-3">
+                                        <button class="btn btn-outline-secondary" onclick="changeFilter('All')">Show All Videos</button>
+                                        <button class="btn btn-outline-secondary" onclick="changeFilter('Unwatched')">Show Unwatched Videos</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
             }
         }, 500);

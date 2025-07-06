@@ -50,6 +50,28 @@ public class WatchedVideosModel : PageModel
         return RedirectToPage(new { SortBy });
     }
 
+    public async Task<IActionResult> OnPostMarkUnwatchedAjaxAsync(int videoId)
+    {
+        try
+        {
+            var video = await _context.Videos.FindAsync(videoId);
+            if (video == null)
+            {
+                return new JsonResult(new { success = false, message = "Video not found." });
+            }
+
+            video.IsWatched = false;
+            video.WatchedAt = null;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, message = "Video marked as unwatched!" });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = "An error occurred while marking the video as unwatched." });
+        }
+    }
+
     private async Task LoadDataAsync()
     {
         var query = _context.Videos

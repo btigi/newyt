@@ -4,6 +4,9 @@
     ViewData["Title"] = "Watched Videos";
 }
 
+<!-- Anti-forgery token for AJAX requests -->
+@Html.AntiForgeryToken()
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Watched Videos (@Model.Videos.Count)</h2>
@@ -112,13 +115,11 @@
                                 <a href="@video.Url" target="_blank" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-play-circle"></i> Watch Again
                                 </a>
-                                <form method="post" asp-page-handler="MarkUnwatched" class="d-inline">
-                                    <input type="hidden" name="videoId" value="@video.Id" />
-                                    <button type="submit" class="btn btn-warning btn-sm" 
-                                            onclick="return confirm('Mark this video as unwatched?')">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-warning btn-sm" 
+                                        data-video-id="@video.Id" 
+                                        onclick="markVideoWatched(@video.Id, 'MarkUnwatchedAjax')">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched
+                                </button>
                             </div>
                         </div>
                     </div>
