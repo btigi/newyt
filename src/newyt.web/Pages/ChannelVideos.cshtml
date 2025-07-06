@@ -4,6 +4,9 @@
     ViewData["Title"] = $"{Model.Channel?.Name} - Videos";
 }
 
+<!-- Anti-forgery token for AJAX requests -->
+@Html.AntiForgeryToken()
+
 <div class="container mt-4">
     @if (Model.Channel != null)
     {
@@ -188,26 +191,19 @@
                                     </a>
                                     @if (video.IsWatched)
                                     {
-                                        <form method="post" asp-page-handler="MarkUnwatched" class="d-inline">
-                                            <input type="hidden" name="videoId" value="@video.Id" />
-                                            <input type="hidden" name="Filter" value="@Model.Filter" />
-                                            <input type="hidden" name="SortBy" value="@Model.SortBy" />
-                                            <button type="submit" class="btn btn-warning btn-sm" 
-                                                    onclick="return confirm('Mark this video as unwatched?')">
-                                                <i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-warning btn-sm" 
+                                                data-video-id="@video.Id" 
+                                                onclick="markVideoWatched(@video.Id, 'MarkUnwatchedAjax')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched
+                                        </button>
                                     }
                                     else
                                     {
-                                        <form method="post" asp-page-handler="MarkWatched" class="d-inline">
-                                            <input type="hidden" name="videoId" value="@video.Id" />
-                                            <input type="hidden" name="Filter" value="@Model.Filter" />
-                                            <input type="hidden" name="SortBy" value="@Model.SortBy" />
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="bi bi-check-circle"></i> Mark Watched
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-success btn-sm" 
+                                                data-video-id="@video.Id" 
+                                                onclick="markVideoWatched(@video.Id, 'MarkWatchedAjax')">
+                                            <i class="bi bi-check-circle"></i> Mark Watched
+                                        </button>
                                     }
                                 </div>
                             </div>

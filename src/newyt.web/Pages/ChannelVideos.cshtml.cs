@@ -91,6 +91,50 @@ public class ChannelVideosModel : PageModel
         return RedirectToPage(new { ChannelId, SortBy, Filter });
     }
 
+    public async Task<IActionResult> OnPostMarkWatchedAjaxAsync(int videoId)
+    {
+        try
+        {
+            var video = await _context.Videos.FindAsync(videoId);
+            if (video == null)
+            {
+                return new JsonResult(new { success = false, message = "Video not found." });
+            }
+
+            video.IsWatched = true;
+            video.WatchedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, message = "Video marked as watched!" });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = "An error occurred while marking the video as watched." });
+        }
+    }
+
+    public async Task<IActionResult> OnPostMarkUnwatchedAjaxAsync(int videoId)
+    {
+        try
+        {
+            var video = await _context.Videos.FindAsync(videoId);
+            if (video == null)
+            {
+                return new JsonResult(new { success = false, message = "Video not found." });
+            }
+
+            video.IsWatched = false;
+            video.WatchedAt = null;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, message = "Video marked as unwatched!" });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = "An error occurred while marking the video as unwatched." });
+        }
+    }
+
     private async Task LoadDataAsync()
     {
         // Load channel information

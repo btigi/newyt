@@ -135,3 +135,270 @@ function changeSortOrder(sortValue) {
         window.location.href = url.toString();
     }
 }
+
+// AJAX functionality for mark watched/unwatched
+function markVideoWatched(videoId, handler = 'MarkWatchedAjax') {
+    const button = document.querySelector(`[data-video-id="${videoId}"]`);
+    if (!button) return;
+    
+    // Store original button state
+    const originalText = button.innerHTML;
+    const originalDisabled = button.disabled;
+    
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Loading...';
+    
+    // Get anti-forgery token
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('videoId', videoId);
+    if (token) {
+        formData.append('__RequestVerificationToken', token);
+    }
+    
+    // Build URL with handler
+    const url = `${window.location.pathname}?handler=${handler}`;
+    
+    // Make AJAX request
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error(`Expected JSON response but got: ${contentType}`);
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update UI based on the action
+            if (handler === 'MarkWatchedAjax') {
+                updateVideoCardAsWatched(videoId);
+            } else if (handler === 'MarkUnwatchedAjax') {
+                updateVideoCardAsUnwatched(videoId);
+            }
+            
+            // Show success message
+            showNotification(data.message, 'success');
+        } else {
+            // Show error message
+            showNotification(data.message, 'error');
+            
+            // Restore original button state
+            button.disabled = originalDisabled;
+            button.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error details:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+        
+        // Restore original button state
+        button.disabled = originalDisabled;
+        button.innerHTML = originalText;
+    });
+}
+
+function updateVideoCardAsWatched(videoId) {
+    const card = document.querySelector(`[data-video-id="${videoId}"]`).closest('.card');
+    if (!card) return;
+    
+    // Check if we're on the index page (only shows unwatched videos)
+    const isIndexPage = window.location.pathname === '/' || window.location.pathname === '/Index';
+    
+    // Check if we're on channel page with "Unwatched" filter
+    const isChannelPage = window.location.pathname.startsWith('/channel/');
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentFilter = urlParams.get('Filter') || 'Unwatched'; // Default filter is Unwatched
+    
+    if (isIndexPage || (isChannelPage && currentFilter === 'Unwatched')) {
+        // On index page OR channel page with unwatched filter, fade out and remove the card
+        card.style.transition = 'opacity 0.5s ease-out';
+        card.style.opacity = '0';
+        
+        setTimeout(() => {
+            card.closest('.col-lg-6').remove();
+            
+            // Check if there are no more video cards and show empty state
+            const videoCards = document.querySelectorAll('.card');
+            if (videoCards.length === 0) {
+                const videoContainer = document.querySelector('.row');
+                if (videoContainer) {
+                    if (isIndexPage) {
+                        videoContainer.innerHTML = `
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <div class="mb-4">
+                                        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #198754;"></i>
+                                    </div>
+                                    <h4>All caught up!</h4>
+                                    <p class="text-muted">You've watched all available videos.</p>
+                                    <a href="/Channels" class="btn btn-outline-info me-2">View Channels</a>
+                                    <a href="/AddChannel" class="btn btn-primary">Add New Channel</a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        videoContainer.innerHTML = `
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <div class="mb-4">
+                                        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #198754;"></i>
+                                    </div>
+                                    <h4>All caught up!</h4>
+                                    <p class="text-muted">All videos from this channel have been watched!</p>
+                                    <div class="mt-3">
+                                        <button class="btn btn-outline-secondary" onclick="changeFilter('All')">Show All Videos</button>
+                                        <button class="btn btn-outline-secondary" onclick="changeFilter('Watched')">Show Watched Videos</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }, 500);
+    } else {
+        // On channel page with "All" or "Watched" filter, update the card to show watched state
+        // Add watched styling
+        card.classList.add('border-success');
+        
+        // Add watched header if it doesn't exist
+        if (!card.querySelector('.card-header')) {
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'card-header bg-success text-white py-1';
+            cardHeader.innerHTML = `<small><i class="bi bi-check-circle"></i> Watched ${new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</small>`;
+            card.insertBefore(cardHeader, card.firstChild);
+        }
+        
+        // Update button from "Mark Watched" to "Mark Unwatched"
+        const button = card.querySelector(`[data-video-id="${videoId}"]`);
+        if (button) {
+            button.className = 'btn btn-warning btn-sm';
+            button.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Mark Unwatched';
+            button.onclick = () => markVideoWatched(videoId, 'MarkUnwatchedAjax');
+        }
+        
+        // Update "Watch" button text
+        const watchButton = card.querySelector('a[href*="youtube.com"]');
+        if (watchButton) {
+            watchButton.innerHTML = '<i class="bi bi-play-circle"></i> Watch Again';
+        }
+        
+        // Add watched badges to thumbnail areas
+        const thumbnailArea = card.querySelector('.position-relative');
+        if (thumbnailArea && !thumbnailArea.querySelector('.position-absolute')) {
+            const badge = document.createElement('div');
+            badge.className = 'position-absolute top-0 start-0 p-2';
+            badge.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Watched</span>';
+            thumbnailArea.appendChild(badge);
+        }
+    }
+}
+
+function updateVideoCardAsUnwatched(videoId) {
+    const card = document.querySelector(`[data-video-id="${videoId}"]`).closest('.card');
+    if (!card) return;
+    
+    // Check if we're on channel page with "Watched" filter
+    const isChannelPage = window.location.pathname.startsWith('/channel/');
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentFilter = urlParams.get('Filter') || 'Unwatched'; // Default filter is Unwatched
+    
+    if (isChannelPage && currentFilter === 'Watched') {
+        // On channel page with "Watched" filter, fade out and remove the card
+        card.style.transition = 'opacity 0.5s ease-out';
+        card.style.opacity = '0';
+        
+        setTimeout(() => {
+            card.closest('.col-lg-6').remove();
+            
+            // Check if there are no more video cards and show empty state
+            const videoCards = document.querySelectorAll('.card');
+            if (videoCards.length === 0) {
+                const videoContainer = document.querySelector('.row');
+                if (videoContainer) {
+                    videoContainer.innerHTML = `
+                        <div class="col-12">
+                            <div class="text-center py-5">
+                                <div class="mb-4">
+                                    <i class="bi bi-search" style="font-size: 4rem; color: #6c757d;"></i>
+                                </div>
+                                <h4>No videos found</h4>
+                                <p class="text-muted">No videos from this channel have been watched yet.</p>
+                                <div class="mt-3">
+                                    <button class="btn btn-outline-secondary" onclick="changeFilter('All')">Show All Videos</button>
+                                    <button class="btn btn-outline-secondary" onclick="changeFilter('Unwatched')">Show Unwatched Videos</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }, 500);
+    } else {
+        // Update the card to show unwatched state
+        // Remove watched styling
+        card.classList.remove('border-success');
+        
+        // Remove watched header
+        const cardHeader = card.querySelector('.card-header');
+        if (cardHeader) {
+            cardHeader.remove();
+        }
+        
+        // Update button from "Mark Unwatched" to "Mark Watched"
+        const button = card.querySelector(`[data-video-id="${videoId}"]`);
+        if (button) {
+            button.className = 'btn btn-success btn-sm';
+            button.innerHTML = '<i class="bi bi-check-circle"></i> Mark Watched';
+            button.onclick = () => markVideoWatched(videoId, 'MarkWatchedAjax');
+        }
+        
+        // Update "Watch Again" button text
+        const watchButton = card.querySelector('a[href*="youtube.com"]');
+        if (watchButton) {
+            watchButton.innerHTML = '<i class="bi bi-play-circle"></i> Watch';
+        }
+        
+        // Remove watched badges from thumbnail areas
+        const watchedBadges = card.querySelectorAll('.position-absolute .badge.bg-success');
+        watchedBadges.forEach(badge => {
+            if (badge.textContent.includes('Watched')) {
+                badge.parentElement.remove();
+            }
+        });
+    }
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 400px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}

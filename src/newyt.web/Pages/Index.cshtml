@@ -4,6 +4,9 @@
     ViewData["Title"] = "New YouTube Videos";
 }
 
+<!-- Anti-forgery token for AJAX requests -->
+@Html.AntiForgeryToken()
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Unwatched Videos (@Model.Videos.Count)</h2>
@@ -108,12 +111,11 @@
                                 <a href="@video.Url" target="_blank" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-play-circle"></i> Watch
                                 </a>
-                                <form method="post" asp-page-handler="MarkWatched" class="d-inline">
-                                    <input type="hidden" name="videoId" value="@video.Id" />
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="bi bi-check-circle"></i> Mark Watched
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-success btn-sm" 
+                                        data-video-id="@video.Id" 
+                                        onclick="markVideoWatched(@video.Id)">
+                                    <i class="bi bi-check-circle"></i> Mark Watched
+                                </button>
                             </div>
                         </div>
                     </div>
